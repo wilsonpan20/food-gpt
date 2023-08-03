@@ -1,7 +1,3 @@
-# Food Commerce GPT
-
-Bot de atendimento para o Food Commerce utilizando modelo GPT da OpenAI. Ele foi desenvolvido para o conteúdo da [Master Class #013](https://youtube.com/live/lCR7Ssw0v-k) da [Dev Samurai](https://devsamurai.com.br).
-
 ## Como funciona?
 
 O bot utiliza o modelo GPT da OpenAI para gerar respostas para as perguntas dos usuários simulando um atendimento humano. Este atendimento é feito através do WhatsApp utilizando o [Venom](https://github.com/orkestral/venom).
@@ -71,7 +67,7 @@ Depois de criado, abra o arquivo `package.json` e adicione os scripts abaixo:
     "build": "rimraf ./build && tsc",
     "dev": "nodemon",
     "start": "node build/index.js"
-  },
+  }
 }
 ```
 
@@ -89,7 +85,7 @@ E crie o arquivo `nodemon.json`:
 Com a nossa estrutura mínima chegou o momento de criar o arquivo `src/index.ts` com uma simples mensagem:
 
 ```ts
-console.log('Hello World!')
+console.log("Hello World!");
 ```
 
 Na sequência criar o arquivo `tsconfig.json` com o comando:
@@ -102,7 +98,7 @@ E por fim, ajustar o diretório de `build` no arquivo `tsconfig.json`:
 
 ```json
 {
-  "outDir": "./build",
+  "outDir": "./build"
 }
 ```
 
@@ -127,7 +123,7 @@ npm install venom-bot
 Com a lib instalada, vamos criar o arquivo `src/index.ts` com o seguinte conteúdo:
 
 ```ts
-import { Message, Whatsapp, create } from "venom-bot"
+import { Message, Whatsapp, create } from "venom-bot";
 
 create({
   session: "food-gpt",
@@ -135,17 +131,17 @@ create({
 })
   .then(async (client: Whatsapp) => await start(client))
   .catch((err) => {
-    console.log(err)
-  })
+    console.log(err);
+  });
 
 async function start(client: Whatsapp) {
   client.onMessage(async (message: Message) => {
-    if (!message.body || message.isGroupMsg) return
+    if (!message.body || message.isGroupMsg) return;
 
-    const response = `Olá!`
+    const response = `Olá!`;
 
-    await client.sendText(message.from, response)
-  })
+    await client.sendText(message.from, response);
+  });
 }
 ```
 
@@ -168,9 +164,9 @@ npm install openai dotenv
 Após a instalação, iremos criar um "gerenciador de configurações" no projeto. Para isso, crie o arquivo `src/config.ts` com o seguinte conteúdo:
 
 ```ts
-import dotenv from "dotenv"
+import dotenv from "dotenv";
 
-dotenv.config()
+dotenv.config();
 
 export const config = {
   openAI: {
@@ -181,21 +177,21 @@ export const config = {
     port: (process.env.REDIS_PORT as unknown as number) || 6379,
     db: (process.env.REDIS_DB as unknown as number) || 0,
   },
-}
+};
 ```
 
 Com o gerenciador de configurações criado, vamos criar o arquivo `src/lib/openai.ts` com o seguinte conteúdo:
 
 ```ts
-import { Configuration, OpenAIApi } from "openai"
+import { Configuration, OpenAIApi } from "openai";
 
-import { config } from "../config"
+import { config } from "../config";
 
 const configuration = new Configuration({
   apiKey: config.openAI.apiToken,
-})
+});
 
-export const openai = new OpenAIApi(configuration)
+export const openai = new OpenAIApi(configuration);
 ```
 
 E no arquivo `src/index.ts` vamos importar o `openai` e criar uma função que será responsável por criar o prompt:
@@ -209,9 +205,9 @@ async function completion(
     temperature: 0,
     max_tokens: 256,
     messages,
-  })
+  });
 
-  return completion.data.choices[0].message?.content
+  return completion.data.choices[0].message?.content;
 }
 ```
 
@@ -220,12 +216,12 @@ E adaptar a função `start` para utilizar o `completion` e criar uma primeira i
 ```ts
 async function start(client: Whatsapp) {
   client.onMessage(async (message: Message) => {
-    if (!message.body || message.isGroupMsg) return
+    if (!message.body || message.isGroupMsg) return;
 
-    const response = (await completion([message.body])) || "Não entendi..."
+    const response = (await completion([message.body])) || "Não entendi...";
 
-    await client.sendText(message.from, content)
-  })
+    await client.sendText(message.from, content);
+  });
 }
 ```
 
@@ -236,12 +232,12 @@ O nosso modelo já responde com uma mensagem, mas ainda não é o suficiente par
 Mas antes disso, para que o bot funcione, é preciso o histórico de todas as mensagens entre o usuário e o bot, assim o modelo consegue entender o contexto da conversa.
 
 ```ts
-import { Message, Whatsapp, create } from "venom-bot"
-import { ChatCompletionRequestMessage } from "openai"
+import { Message, Whatsapp, create } from "venom-bot";
+import { ChatCompletionRequestMessage } from "openai";
 
-import { openai } from "./lib/openai"
+import { openai } from "./lib/openai";
 
-const customerChat: ChatCompletionRequestMessage[] = []
+const customerChat: ChatCompletionRequestMessage[] = [];
 
 create({
   session: "food-gpt",
@@ -249,27 +245,27 @@ create({
 })
   .then(async (client: Whatsapp) => await start(client))
   .catch((err) => {
-    console.log(err)
-  })
+    console.log(err);
+  });
 
 async function start(client: Whatsapp) {
   client.onMessage(async (message: Message) => {
-    if (!message.body || message.isGroupMsg) return
+    if (!message.body || message.isGroupMsg) return;
 
     customerChat.push({
       role: "user",
-      content: message.body
-    })
+      content: message.body,
+    });
 
-    const response = (await completion(customerChat)) || "Não entendi..."
+    const response = (await completion(customerChat)) || "Não entendi...";
 
     customerChat.push({
       role: "assistant",
-      content: response
-    })
+      content: response,
+    });
 
-    await client.sendText(message.from, content)
-  })
+    await client.sendText(message.from, content);
+  });
 }
 ```
 
@@ -395,12 +391,12 @@ Note que é um roteiro extremamente detalhado, para que possa atender a qualquer
 E depois iremos criar a função no arquivo [`src/utils/initPrompt.ts`](./src//utils/initPrompt.ts) que carrega esse prompt e também possibilita ajustar alguns dados:
 
 ```ts
-import { prompt } from "../prompts/pizzaAgent"
+import { prompt } from "../prompts/pizzaAgent";
 
 export function initPrompt(storeName: string, orderCode: string): string {
   return prompt
     .replace(/{{[\s]?storeName[\s]?}}/g, storeName) // aqui é onde substituímos o nome da loja - {{ storeName }}
-    .replace(/{{[\s]?orderCode[\s]?}}/g, orderCode) // aqui é onde substituímos o código do pedido - {{ orderCode }}
+    .replace(/{{[\s]?orderCode[\s]?}}/g, orderCode); // aqui é onde substituímos o código do pedido - {{ orderCode }}
 }
 ```
 
@@ -462,7 +458,7 @@ Para armazenar os dados de conversas e o status de cada pedido, iremos utilizar 
 
 O Redis é um banco de dados em memória, que é extremamente rápido e simples de utilizar. Ele é muito utilizado para armazenar dados que precisam ser acessados rapidamente, como por exemplo, o status de um pedido.
 
-Ele basicamente trabalha como um 'grande array' (*arrayzão*) com chave e valor.
+Ele basicamente trabalha como um 'grande array' (_arrayzão_) com chave e valor.
 
 A chave iremos armazenar o número do telefone do cliente, e o valor iremos armazenar o status do pedido e conversa.
 
@@ -477,41 +473,41 @@ npm install ioredis
 E criar o arquivo `src/lib/redis.ts` que será responsável por criar a conexão com o Redis:
 
 ```ts
-import { Redis } from "ioredis"
+import { Redis } from "ioredis";
 
-import { config } from "../config"
+import { config } from "../config";
 
 export const redis = new Redis({
   host: config.redis.host,
   port: config.redis.port,
   db: config.redis.db,
-})
+});
 ```
 
 O Redis é bem fácil de utilizar, basicamente ele possui duas funções principais: `set` e `get`.
 
 ```ts
-redis.set("chave", "valor")
-const value = await redis.get("chave")
+redis.set("chave", "valor");
+const value = await redis.get("chave");
 ```
 
 O Redis consegue gravar valores apenas em string, por isso precisamos converter o objeto para string com `JSON.stringify` e depois converter novamente para objeto com `JSON.parse`.
 
 ```ts
-redis.set("chave", JSON.stringify({ foo: "bar" }))
-const obj = JSON.parse((await redis.get("chave")) || "{}")
+redis.set("chave", JSON.stringify({ foo: "bar" }));
+const obj = JSON.parse((await redis.get("chave")) || "{}");
 ```
 
 Para que o nosso bot a conversa de cada cliente, iremos ajustar o código abaixo:
 
 ```ts
-import { Message, Whatsapp, create } from "venom-bot"
-import { ChatCompletionRequestMessage } from "openai"
+import { Message, Whatsapp, create } from "venom-bot";
+import { ChatCompletionRequestMessage } from "openai";
 
-import { openai } from "./lib/openai"
-import { redis } from "./lib/redis"
+import { openai } from "./lib/openai";
+import { redis } from "./lib/redis";
 
-import { initPrompt } from "./utils/initPrompt"
+import { initPrompt } from "./utils/initPrompt";
 
 create({
   session: "food-gpt",
@@ -519,21 +515,21 @@ create({
 })
   .then(async (client: Whatsapp) => await start(client))
   .catch((err) => {
-    console.log(err)
-  })
+    console.log(err);
+  });
 
 async function start(client: Whatsapp) {
   client.onMessage(async (message: Message) => {
-    if (!message.body || message.isGroupMsg) return
+    if (!message.body || message.isGroupMsg) return;
 
-    const storeName = "Pizzaria Los Italianos"
+    const storeName = "Pizzaria Los Italianos";
 
-    const customerPhone = `+${message.from.replace("@c.us", "")}`
-    const customerName = message.author
-    const customerKey = `customer:${customerPhone}:chat`
-    const orderCode = `#sk-${("00000" + Math.random()).slice(-5)}`
+    const customerPhone = `+${message.from.replace("@c.us", "")}`;
+    const customerName = message.author;
+    const customerKey = `customer:${customerPhone}:chat`;
+    const orderCode = `#sk-${("00000" + Math.random()).slice(-5)}`;
 
-    const lastChat = JSON.parse((await redis.get(customerKey)) || "[]") // carrega a conversa do cliente do Redis
+    const lastChat = JSON.parse((await redis.get(customerKey)) || "[]"); // carrega a conversa do cliente do Redis
 
     const customerChat: CustomerChat =
       lastChat.length > 0
@@ -542,25 +538,25 @@ async function start(client: Whatsapp) {
             {
               role: "system",
               content: initPrompt(storeName, orderCode),
-            }
-          ]
+            },
+          ];
 
     customerChat.push({
       role: "user",
-      content: message.body
-    })
+      content: message.body,
+    });
 
-    const response = (await completion(customerChat)) || "Não entendi..."
+    const response = (await completion(customerChat)) || "Não entendi...";
 
     customerChat.push({
       role: "assistant",
-      content: response
-    })
+      content: response,
+    });
 
-    await client.sendText(message.from, content)
+    await client.sendText(message.from, content);
 
-    redis.set(customerKey, JSON.stringify(customerChat)) // grava a conversa do cliente no Redis
-  })
+    redis.set(customerKey, JSON.stringify(customerChat)); // grava a conversa do cliente no Redis
+  });
 }
 ```
 
@@ -598,25 +594,25 @@ npm run dev
 Agora para que possamos controlar o status de cada pedido, iremos ajustar a estrutura de dados de mensagens e usuário:
 
 ```ts
-import { ChatCompletionRequestMessage } from "openai"
-import { Message, Whatsapp, create } from "venom-bot"
+import { ChatCompletionRequestMessage } from "openai";
+import { Message, Whatsapp, create } from "venom-bot";
 
-import { openai } from "./lib/openai"
-import { redis } from "./lib/redis"
+import { openai } from "./lib/openai";
+import { redis } from "./lib/redis";
 
-import { initPrompt } from "./utils/initPrompt"
+import { initPrompt } from "./utils/initPrompt";
 
 // declara a interface de mensagens
 interface CustomerChat {
-  status?: "open" | "closed"
-  orderCode: string
-  chatAt: string
+  status?: "open" | "closed";
+  orderCode: string;
+  chatAt: string;
   customer: {
-    name: string
-    phone: string
-  }
-  messages: ChatCompletionRequestMessage[]
-  orderSummary?: string
+    name: string;
+    phone: string;
+  };
+  messages: ChatCompletionRequestMessage[];
+  orderSummary?: string;
 }
 
 async function completion(
@@ -627,9 +623,9 @@ async function completion(
     temperature: 0,
     max_tokens: 256,
     messages,
-  })
+  });
 
-  return completion.data.choices[0].message?.content
+  return completion.data.choices[0].message?.content;
 }
 
 create({
@@ -638,21 +634,21 @@ create({
 })
   .then(async (client: Whatsapp) => await start(client))
   .catch((err) => {
-    console.log(err)
-  })
+    console.log(err);
+  });
 
 async function start(client: Whatsapp) {
-  const storeName = "Pizzaria Los Italianos"
+  const storeName = "Pizzaria Los Italianos";
 
   client.onMessage(async (message: Message) => {
-    if (!message.body || message.isGroupMsg) return
+    if (!message.body || message.isGroupMsg) return;
 
-    const customerPhone = `+${message.from.replace("@c.us", "")}`
-    const customerName = message.author
-    const customerKey = `customer:${customerPhone}:chat`
-    const orderCode = `#sk-${("00000" + Math.random()).slice(-5)}`
+    const customerPhone = `+${message.from.replace("@c.us", "")}`;
+    const customerName = message.author;
+    const customerKey = `customer:${customerPhone}:chat`;
+    const orderCode = `#sk-${("00000" + Math.random()).slice(-5)}`;
 
-    const lastChat = JSON.parse((await redis.get(customerKey)) || "{}")
+    const lastChat = JSON.parse((await redis.get(customerKey)) || "{}");
 
     const customerChat: CustomerChat =
       lastChat?.status === "open"
@@ -672,50 +668,50 @@ async function start(client: Whatsapp) {
               },
             ],
             orderSummary: "",
-          }
+          };
 
-    console.debug(customerPhone, "👤", message.body)
+    console.debug(customerPhone, "👤", message.body);
 
     customerChat.messages.push({
       role: "user",
       content: message.body,
-    })
+    });
 
     const content =
-      (await completion(customerChat.messages)) || "Não entendi..."
+      (await completion(customerChat.messages)) || "Não entendi...";
 
     customerChat.messages.push({
       role: "assistant",
       content,
-    })
+    });
 
-    console.debug(customerPhone, "🤖", content)
+    console.debug(customerPhone, "🤖", content);
 
-    await client.sendText(message.from, content)
+    await client.sendText(message.from, content);
 
     // quando o bot repassar o número de pedido para o cliente, ele irá fechar o pedido e solicitar um resumo final para que possamos repassar a um atendente de forma resumida
     if (
       customerChat.status === "open" &&
       content.match(customerChat.orderCode)
     ) {
-      customerChat.status = "closed"
+      customerChat.status = "closed";
 
       customerChat.messages.push({
         role: "user",
         content:
           "Gere um resumo de pedido para registro no sistema da pizzaria, quem está solicitando é um robô.",
-      })
+      });
 
       const content =
-        (await completion(customerChat.messages)) || "Não entendi..."
+        (await completion(customerChat.messages)) || "Não entendi...";
 
-      console.debug(customerPhone, "📦", content)
+      console.debug(customerPhone, "📦", content);
 
-      customerChat.orderSummary = content // armazena o resumo do pedido e NÃO envia para o cliente
+      customerChat.orderSummary = content; // armazena o resumo do pedido e NÃO envia para o cliente
     }
 
-    redis.set(customerKey, JSON.stringify(customerChat))
-  })
+    redis.set(customerKey, JSON.stringify(customerChat));
+  });
 }
 ```
 
